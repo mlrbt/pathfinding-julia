@@ -132,9 +132,10 @@ runAlgo("Astar", "street-map/Paris_2_256.map", (10,10), (240,240))
 Sortie typique :
 
 ```
-Distance D → A : 488
+Distance D → A : 488.0
 Number of states evaluated : 14219
-CPU time (s) : 1.38
+Path D → A : (10, 10)→...→(240, 240)
+CPU time (s) : 1.24
 ```
 
 ---
