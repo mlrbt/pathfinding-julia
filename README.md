@@ -12,6 +12,17 @@ Algorithmes implémentés :
 - Greedy Best-First Search
 
 ---
+# Mise à jour avant la phase 2
+
+Avant le début de la phase 2 du projet, une amélioration importante a été apportée à l’implémentation de l’algorithme A*.
+
+La version initiale de A* reposait sur une recherche linéaire du minimum sur l’ensemble de la grille, ce qui entraînait des performances sous-optimales.
+
+Cette implémentation a été corrigée en utilisant une structure de données adaptée (file de priorité / PriorityQueue), permettant de sélectionner efficacement le nœud de coût minimal.
+
+Cette optimisation rend l’algorithme conforme à son implémentation théorique standard et améliore significativement les performances.
+
+---
 
 # Structure du projet
 
