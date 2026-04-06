@@ -12,6 +12,18 @@ Algorithmes implémentés :
 - Greedy Best-First Search
 
 ---
+# Dépendances
+
+Ce projet utilise le package suivant pour l’implémentation optimisée de l’algorithme A* :
+
+- DataStructures (pour la PriorityQueue)
+
+Avant d’exécuter le projet, installer la dépendance avec Julia :
+
+```julia
+import Pkg
+Pkg.add("DataStructures")
+
 # Mise à jour avant la phase 2
 
 Avant le début de la phase 2 du projet, une amélioration importante a été apportée à l’implémentation de l’algorithme A*.

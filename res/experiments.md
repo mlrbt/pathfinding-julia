@@ -11,6 +11,8 @@ Les algorithmes BFS, Dijkstra, A* et Greedy Best-First Search ont été testés 
 - Coût des déplacements : uniforme (coût = 1 par mouvement)
 - Heuristique utilisée (A* et Greedy) : distance de Manhattan
 
+Une version optimisée de l’algorithme A* a été utilisée, reposant sur une file de priorité (PriorityQueue).
+
 Les métriques observées sont :
 - Distance du chemin trouvé
 - Nombre d’états évalués
@@ -43,14 +45,16 @@ Cependant, il est significativement plus lent en raison de l’utilisation d’u
 
 ---
 
-### A*
+### A* (version optimisée)
 
 - Distance : 488
-- États évalués : 14 219
-- Temps CPU : 1.386 s
+- États évalués : 13 062
+- Temps CPU : 0.063 s
 
 A* trouve un chemin optimal.  
-Grâce à l’heuristique (distance de Manhattan), il réduit fortement le nombre d’états explorés (environ 3 fois moins que BFS/Dijkstra).
+Grâce à l’heuristique (distance de Manhattan) et à l’utilisation d’une file de priorité, il réduit fortement le nombre d’états explorés (environ 3 fois moins que BFS/Dijkstra).
+
+L’optimisation permet également une amélioration significative du temps d’exécution par rapport à une implémentation naïve.
 
 ---
 
@@ -68,9 +72,10 @@ Cependant, il ne garantit pas l’optimalité et produit ici un chemin plus long
 ## 3. Analyse comparative
 
 - BFS et Dijkstra garantissent l’optimalité mais explorent un grand nombre d’états.
-- Dijkstra est plus coûteux en temps que BFS en raison de la gestion de la file de priorité.
-- A* réduit considérablement l’espace exploré tout en conservant l’optimalité.
-- Greedy est le plus rapide mais ne garantit pas un chemin optimal.
+- Dijkstra est le plus coûteux en temps en raison de la gestion de la file de priorité.
+- A* optimise drastiquement l’exploration grâce à l’heuristique.
+- L’utilisation d’une structure de données adaptée (PriorityQueue) permet à A* d’obtenir de très bonnes performances en temps.
+- Greedy est le plus rapide mais sacrifie l’optimalité.
 
 ---
 
@@ -79,7 +84,8 @@ Cependant, il ne garantit pas l’optimalité et produit ici un chemin plus long
 Sur une carte réelle avec des coûts uniformes :
 
 - A* offre le meilleur compromis entre performance et optimalité.
+- L’optimisation de A* via une file de priorité est déterminante pour améliorer ses performances.
 - Dijkstra n’apporte pas d’avantage par rapport à BFS dans ce contexte.
 - Greedy est efficace en temps de calcul mais non fiable si l’on exige une solution optimale.
 
-L’algorithme A* apparaît donc comme le plus adapté pour ce type de problème.
+L’algorithme A* optimisé apparaît donc comme le plus adapté pour ce type de problème.
