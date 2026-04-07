@@ -15,41 +15,31 @@ Retourne :
 """
 function readMap(fname::String)
 
-    # Je lis toutes les lignes du fichier
-    lines = readlines(joinpath("dat", fname))
+    lines = readlines(fname)
 
-    height = 0
-    width = 0
-    grid_start = 0
+    height = parse(Int, split(lines[2])[2])
+    width  = parse(Int, split(lines[3])[2])
 
-    # Je parcours le header pour récupérer height et width
-    for (i, line) in enumerate(lines)
+    grid = fill('@', height, width)
 
-        if startswith(line, "height")
-            height = parse(Int, split(line)[2])
+    map_lines = lines[5:end]
 
-        elseif startswith(line, "width")
-            width = parse(Int, split(line)[2])
-
-        elseif line == "map"
-            grid_start = i + 1
-            break
-        end
-    end
-
-    # Je vérifie que les dimensions ont bien été trouvées
-    if height == 0 || width == 0
-        error("Erreur : format .map invalide (height ou width manquant).")
-    end
-
-    # J’alloue explicitement la matrice (performance maîtrisée)
-    grid = Array{Char}(undef, height, width)
-
-    # Je remplis la grille caractère par caractère
     for i in 1:height
-        row = lines[grid_start + i - 1]
+
+        line = rstrip(map_lines[i])  # enlève espaces invisibles
+
+        if length(line) < width
+            # complète la ligne si trop courte
+            line *= repeat(".", width - length(line))
+        end
+
+        if length(line) > width
+            # coupe si trop longue
+            line = line[1:width]
+        end
+
         for j in 1:width
-            grid[i, j] = row[j]
+            grid[i,j] = line[j]
         end
     end
 

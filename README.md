@@ -56,7 +56,7 @@ pathfinding-julia/
 │   ├── rapport.md
 │   └── experiments.md
 │
-├── main.jl           # point d’entrée du programme
+├── main_phase1.jl           # point d’entrée du programme
 │
 ├── res/              # résultats éventuels
 │
@@ -128,7 +128,7 @@ Caractéristiques :
 Lancer Julia dans le dossier du projet puis charger le fichier principal :
 
 ```julia
-include("main.jl")
+include("main_phase1.jl")
 ```
 
 La fonction principale permettant d’exécuter un algorithme est :

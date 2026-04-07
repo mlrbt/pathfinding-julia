@@ -3,81 +3,111 @@ module AStarAlgo
 using ..Utils
 using DataStructures
 
-export algoAstar
+export algoAstarTime
 
-"""
-    algoAstar(fname, D, A)
+function isNodeForbidden(pos, time, node_constraints)
 
-Implémentation de l’algorithme A*
-avec heuristique de Manhattan.
-"""
-function algoAstar(fname, D::Tuple{Int,Int}, A::Tuple{Int,Int})
+    for c in node_constraints
+        if c.position == pos && c.time == time
+            return true
+        end
+    end
+
+    return false
+end
+
+function isEdgeForbidden(from, to, time, edge_constraints)
+
+    for c in edge_constraints
+        if c.from == to && c.to == from && c.time == time
+            return true
+        end
+    end
+
+    return false
+end
+
+function algoAstarTime(fname, D, A, start_time, node_constraints, edge_constraints)
+
+    max_time = 1000
 
     grid, height, width = Utils.readMap(fname)
 
-    g = fill(Inf, height, width)
-    visited = falses(height, width)
-    parent = Dict{Tuple{Int,Int}, Tuple{Int,Int}}()
+    g = Dict{Tuple{Int,Int,Int}, Float64}()
+    parent = Dict{Tuple{Int,Int,Int}, Tuple{Int,Int,Int}}()
 
-    pq = PriorityQueue{Tuple{Int,Int}, Float64}()
+    pq = PriorityQueue{Tuple{Int,Int,Int}, Float64}()
 
-    g[D...] = 0.0
-    pq[D] = 0.0
+    start = (D[1], D[2], start_time)
+
+    g[start] = 0.0
+    pq[start] = 0.0
 
     statesEvaluated = 0
 
     while !isempty(pq)
 
         current = dequeue!(pq)
-        i, j = current
+        i, j, t = current
 
-        if visited[i,j]
+        # Si cette entrée de file est dépassée, on l’ignore
+        # Cela évite de traiter plusieurs fois un état avec un coût obsolète.
+        current_priority = g[current] + Utils.manhattan((i, j), A)
+        if current_priority < 0
             continue
         end
 
-        visited[i,j] = true
         statesEvaluated += 1
 
-        if current == A
-            break
+       if (i, j) == A
+            println("GOAL REACHED AT: ", (i, j), " time=", t)
+            println("EXPECTED GOAL: ", A)
+            return g, parent, statesEvaluated
         end
 
         neighbors = Utils.getNeighbors(grid, i, j)
 
+        # attente autorisée
+        push!(neighbors, (i, j))
+
         for (ni, nj) in neighbors
 
-            if !visited[ni,nj]
+            nt = t + 1
 
-                cost = Utils.movementCost(grid, ni, nj)
-                newG = g[i,j] + cost
+            if nt > max_time
+                continue
+            end
 
-                if newG < g[ni,nj]
-                    g[ni,nj] = newG
-                    parent[(ni,nj)] = current
+            if isNodeForbidden((ni, nj), nt, node_constraints)
+                continue
+            end
 
-                    f = newG + Utils.manhattan((ni,nj), A)
-                    pq[(ni,nj)] = f
-                end
+            if isEdgeForbidden((i, j), (ni, nj), t, edge_constraints)
+                continue
+            end
+
+            new_state = (ni, nj, nt)
+
+            cost = Utils.movementCost(grid, ni, nj)
+
+            # On préfère légèrement l’attente aux détours inutiles
+            if (ni, nj) == (i, j)
+                cost = 0.5
+            end
+
+            newG = g[current] + cost
+
+            if !haskey(g, new_state) || newG < g[new_state]
+                g[new_state] = newG
+                parent[new_state] = current
+
+                f = newG + Utils.manhattan((ni, nj), A)
+                pq[new_state] = f
             end
         end
     end
 
-    if g[A...] == Inf
-        return -1, statesEvaluated, Tuple{Int,Int}[]
-    end
-
-    path = Tuple{Int,Int}[]
-    current = A
-
-    while current != D
-        push!(path, current)
-        current = parent[current]
-    end
-
-    push!(path, D)
-    reverse!(path)
-
-    return g[A...], statesEvaluated, path
+    return g, parent, statesEvaluated
 end
 
 end
