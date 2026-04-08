@@ -46,6 +46,8 @@ Planifier des missions :
 
 Utilisation d’un **A* spatio-temporel** :
 
+Le problème devient exponentiel avec plusieurs robots, car il faut gérer simultanément les interactions entre agents (collisions, conflits de trajectoires).
+
 - état = (i, j, t)
 - le temps est intégré dans la recherche
 - contraintes dynamiques
@@ -89,6 +91,8 @@ Planification **séquentielle** :
 - robuste  
 mais dépend de l’ordre → pas optimal globalement
 
+L’ordre des AMR influence directement la solution finale.
+
 ---
 
 ## Structures principales
@@ -98,6 +102,12 @@ mais dépend de l’ordre → pas optimal globalement
 - `Mission` : déplacement entre quais
 - `Constraint` : contrainte de position
 - `EdgeConstraint` : contrainte de mouvement
+
+---
+# Complexité
+
+- Phase 1 : complexité classique A* dépendant de la taille de la grille  
+- Phase 2 : explosion combinatoire due à la dimension temporelle et aux interactions entre agents  
 
 ---
 
@@ -178,7 +188,7 @@ Installer le package nécessaire :
 ```julia
 import Pkg
 Pkg.add("DataStructures")
----
+```
 
 # Exécution
 
@@ -319,4 +329,6 @@ Avec plusieurs scénarios permettant d’illustrer :
 - l’importance de l’attente  
 - l’impact de la planification séquentielle  
 
-Le projet montre bien le passage d’un problème simple (1 robot) à un problème complexe (multi-agents contraints).
+Ce projet met en évidence la difficulté des problèmes multi-agents, où une solution locale optimale (par robot) ne garantit pas une solution globale optimale.
+
+Il ouvre la voie à des approches plus avancées comme CBS, permettant une résolution plus efficace des conflits.
