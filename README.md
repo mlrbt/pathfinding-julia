@@ -166,9 +166,8 @@ Plusieurs scénarios permettent de tester différents comportements :
 - `scenarios.jl` : définition des scénarios AMR
 - `main.jl` : point d’entrée de la phase 2
 - `main_phase1.jl` : point d’entrée de la phase 1
-- `doc/rapport.md` : rapport
-- `res/experiments.md` : résultats expérimentaux
-- `test/` : fichiers de test
+- `res/experiments.md` : résultats expérimentaux phase 1
+
 
 ---
 
