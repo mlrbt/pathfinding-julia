@@ -1,8 +1,12 @@
 # Pathfinding Algorithms in Julia
 
-Projet réalisé dans le cadre du cours d’algorithmique.
+Projet réalisé dans le cadre du projet d'informatique.
 
-L’objectif de ce projet est d’implémenter et de comparer plusieurs algorithmes de recherche de chemin sur des cartes au format MovingAI.
+L’objectif est d’implémenter et d’étendre des algorithmes de recherche de chemin sur des cartes , puis de gérer plusieurs robots (AMR) en évitant les collisions.
+
+---
+
+# Phase 1 — Pathfinding classique
 
 Algorithmes implémentés :
 
@@ -11,57 +15,200 @@ Algorithmes implémentés :
 - A*
 - Greedy Best-First Search
 
+Ces algorithmes permettent de calculer un chemin optimal entre deux points sur une grille.
+
 ---
-# Dépendances
 
-Ce projet utilise le package suivant pour l’implémentation optimisée de l’algorithme A* :
+# Optimisation A*
 
-- DataStructures (pour la PriorityQueue)
+Avant la phase 2, l’implémentation de A* a été améliorée :
 
-Avant d’exécuter le projet, installer la dépendance avec Julia :
+- passage d’une recherche linéaire → PriorityQueue
+- complexité fortement réduite
+- comportement conforme à l’implémentation théorique
 
-```julia
-import Pkg
-Pkg.add("DataStructures")
+---
 
-# Mise à jour avant la phase 2
+# Phase 2 — Multi-AMR
 
-Avant le début de la phase 2 du projet, une amélioration importante a été apportée à l’implémentation de l’algorithme A*.
+Extension du projet pour gérer **plusieurs robots simultanément**.
 
-La version initiale de A* reposait sur une recherche linéaire du minimum sur l’ensemble de la grille, ce qui entraînait des performances sous-optimales.
+## Objectif
 
-Cette implémentation a été corrigée en utilisant une structure de données adaptée (file de priorité / PriorityQueue), permettant de sélectionner efficacement le nœud de coût minimal.
+Planifier des missions :
+- sans collision (même case au même temps)
+- sans swap (échange de position simultané)
+- avec un coût minimal
 
-Cette optimisation rend l’algorithme conforme à son implémentation théorique standard et améliore significativement les performances.
+---
+
+## Approche
+
+Utilisation d’un **A* spatio-temporel** :
+
+- état = (i, j, t)
+- le temps est intégré dans la recherche
+- contraintes dynamiques
+
+---
+
+## Contraintes
+
+Deux types de contraintes sont utilisés :
+
+### Node constraint
+Interdit une position à un instant donné  
+→ évite les collisions directes
+
+### Edge constraint
+Interdit un mouvement à un instant donné  
+→ évite les swaps (A ↔ B)
+
+---
+
+## Attente
+
+Une action d’attente est introduite :
+
+- permet d’éviter des détours inutiles
+- coût volontairement faible (0.5)
+- améliore la faisabilité dans les zones congestionnées
+
+---
+
+## Stratégie Multi-AMR
+
+Planification **séquentielle** :
+
+1. planifier AMR 1
+2. transformer son chemin en contraintes
+3. planifier AMR 2 avec contraintes
+4. etc.
+
+- simple  
+- robuste  
+mais dépend de l’ordre → pas optimal globalement
+
+---
+
+## Structures principales
+
+- `AMR` : robot
+- `Quai` : point logique sur la carte
+- `Mission` : déplacement entre quais
+- `Constraint` : contrainte de position
+- `EdgeConstraint` : contrainte de mouvement
+
+---
+
+## Pipeline global
+
+1. A* spatio-temporel
+2. reconstruction du chemin
+3. ajout du temps (`pathWithTime`)
+4. génération des contraintes
+5. planification du robot suivant
+
+---
+
+# Scénarios disponibles
+
+Plusieurs scénarios permettent de tester différents comportements :
+
+### 1 — Demo (conflits)
+- collisions frontales
+- congestion
+
+### 2 — Goulot strict
+- passage étroit
+- forte contention
+
+### 3 — Swap demo
+- démontre l’interdiction de swap
+
+### 4 — No collision
+- aucun conflit
+- comportement nominal
+
+### 5 — Wait demo
+- montre que l’attente est nécessaire
+
+### 6 — Sequential demo
+- montre l’impact de l’ordre de planification
 
 ---
 
 # Structure du projet
 
-Le projet est organisé de la manière suivante :
+- `dat/`
+  - `crossdock/` : maps de la phase 2
+    - `demo_oral.map`
+    - `goulot_strict.map`
+    - `swap_demo.map`
+    - `no_collision.map`
+    - `wait_demo.map`
+    - `sequential_demo.map`
+    - `crossdock.map`
+    - `crossdock14.map`
+    - `crossdock_simple.map`
+  - `street-map/` : maps MovingAI de benchmark
+  - `didactic.map`
 
-```
-pathfinding-julia/
-│
-├── dat/              # cartes au format .map
-│
-├── src/              # implémentation des algorithmes
-│   ├── utils.jl
-│   ├── bfs.jl
-│   ├── dijkstra.jl
-│   ├── astar.jl
-│   └── greedy.jl
-│
-├── doc/              # documentation et rapport
-│   ├── rapport.md
-│   └── experiments.md
-│
-├── main_phase1.jl           # point d’entrée du programme
-│
-├── res/              # résultats éventuels
-│
-└── test/             # fichiers de test
-```
+- `src/`
+  - `utils.jl`
+  - `bfs.jl`
+  - `dijkstra.jl`
+  - `astar.jl`
+  - `astar_phase1.jl`
+  - `greedy.jl`
+  - `multi_amr.jl`
+
+- `scenarios.jl` : définition des scénarios AMR
+- `main.jl` : point d’entrée de la phase 2
+- `main_phase1.jl` : point d’entrée de la phase 1
+- `doc/rapport.md` : rapport
+- `res/experiments.md` : résultats expérimentaux
+- `test/` : fichiers de test
+
+---
+
+# Dépendances
+
+Installer le package nécessaire :
+
+```julia
+import Pkg
+Pkg.add("DataStructures")
+---
+
+# Exécution
+
+## Phase 1
+
+Lancer Julia puis :
+
+include("main_phase1.jl")
+
+Puis utiliser :
+
+runAlgo("Astar", "dat/street-map/Paris_2_256.map", (10,10), (200,200))
+
+---
+
+## Phase 2 — Multi-AMR
+
+Lancer :
+
+include("main.jl")
+
+Puis choisir un scénario :
+
+1 - Demo (conflits)  
+2 - Goulot strict  
+3 - Swap demo  
+4 - No collisions  
+5 - Wait demo  
+6 - Sequential demo  
 
 ---
 
@@ -69,105 +216,108 @@ pathfinding-julia/
 
 ## utils.jl
 
-Ce module contient les fonctions utilitaires utilisées par tous les algorithmes :
+Fonctions utilitaires :
 
-- lecture des cartes `.map`
-- génération des voisins accessibles
-- calcul du coût de déplacement
+- lecture des maps (.map)
+- récupération des voisins
+- coût de déplacement
 - heuristique de Manhattan
 
 ---
 
 ## bfs.jl
 
-Implémentation de l’algorithme **Breadth-First Search**.
-
-Caractéristiques :
+Algorithme BFS :
 
 - exploration par niveaux
-- optimal lorsque les coûts sont uniformes
+- optimal si coût uniforme
 
 ---
 
 ## dijkstra.jl
 
-Implémentation de **l’algorithme de Dijkstra**.
+Algorithme de Dijkstra :
 
-Caractéristiques :
-
-- fonctionne avec des coûts pondérés
+- gère les coûts pondérés
 - garantit un chemin optimal
+
+---
+
+## astar_phase1.jl
+
+A* classique :
+
+- heuristique de Manhattan
+- optimisation avec PriorityQueue
 
 ---
 
 ## astar.jl
 
-Implémentation de **l’algorithme A\***.
+A* spatio-temporel :
 
-Caractéristiques :
-
-- utilise une heuristique (distance de Manhattan)
-- réduit l’espace de recherche
-- garantit un chemin optimal si l’heuristique est admissible
-
----
-
-## greedy.jl
-
-Implémentation de **Greedy Best-First Search**.
-
-Caractéristiques :
-
-- sélectionne le sommet avec l’heuristique minimale
-- très rapide mais ne garantit pas l’optimalité
+- état = (position + temps)
+- gestion des contraintes
+- gestion de l’attente
+- évite collisions et swaps
 
 ---
 
-# Exécution du projet
+## multi_amr.jl
 
-Lancer Julia dans le dossier du projet puis charger le fichier principal :
+Gestion multi-robots :
 
-```julia
-include("main_phase1.jl")
-```
-
-La fonction principale permettant d’exécuter un algorithme est :
-
-```julia
-runAlgo(algoName, mapFile, start, goal)
-```
-
-Paramètres :
-
-- `algoName` : `"BFS"`, `"Dijkstra"`, `"Astar"` ou `"Greedy"`
-- `mapFile` : chemin du fichier `.map` situé dans le dossier `dat`
-- `start` : position de départ `(i,j)`
-- `goal` : position d’arrivée `(i,j)`
+- planification séquentielle
+- génération des contraintes
+- simulation visuelle
+- gestion des missions
 
 ---
 
-# Exemple d'exécution
+## scenarios.jl
 
-```julia
-runAlgo("Astar", "street-map/Paris_2_256.map", (10,10), (240,240))
-```
+Définit les scénarios de test :
 
-Sortie typique :
-
-```
-Distance D → A : 488.0
-Number of states evaluated : 14219
-Path D → A : (10, 10)→...→(240, 240)
-CPU time (s) : 1.24
-```
+- conflits
+- goulots
+- swap
+- attente
+- ordre de planification
 
 ---
 
-# Résultats expérimentaux
+# Limites du projet
 
-Les comparaisons entre les algorithmes sont présentées dans le fichier :
+- dépend de l’ordre des AMR  
+- solution non optimale globalement  
+- pas de replanification globale  
+- approche séquentielle simplifiée  
 
-```
-doc/experiments.md
-```
+---
 
+# Améliorations possibles
+
+- priorisation intelligente des AMR  
+- replanification dynamique  
+- CBS (Conflict-Based Search)  
+- parallélisation  
+- optimisation des coûts  
+
+---
+
+# Conclusion
+
+Projet combinant :
+
+- pathfinding classique  
+- gestion multi-robots  
+- contraintes spatio-temporelles  
+
+Avec plusieurs scénarios permettant d’illustrer :
+
+- les collisions  
+- les swaps  
+- l’importance de l’attente  
+- l’impact de la planification séquentielle  
+
+Le projet montre bien le passage d’un problème simple (1 robot) à un problème complexe (multi-agents contraints).

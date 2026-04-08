@@ -113,5 +113,82 @@ function scenario_crossdock_14()
 
     return "dat/crossdock/crossdock14.map", missions
 end
+function scenario_swap_demo()
 
+    # 2 quais uniquement
+    Q1 = MultiAMR.Quai(1, (2,3))
+    Q2 = MultiAMR.Quai(2, (4,3))
+
+    missions = [
+
+        #  swap pur
+        MultiAMR.Mission(1, Q1, Q2, 1),
+        MultiAMR.Mission(2, Q2, Q1, 1)
+    ]
+
+    return "dat/crossdock/swap_demo.map", missions
+end
+function scenario_no_collision()
+
+    # quais du haut
+    Q1 = MultiAMR.Quai(1, (2,3))
+    Q2 = MultiAMR.Quai(2, (2,11))
+    Q3 = MultiAMR.Quai(3, (2,19))
+
+    # quais du bas
+    Q4 = MultiAMR.Quai(4, (4,3))
+    Q5 = MultiAMR.Quai(5, (4,11))
+    Q6 = MultiAMR.Quai(6, (4,19))
+
+    missions = [
+        MultiAMR.Mission(1, Q1, Q6, 1),
+        MultiAMR.Mission(2, Q2, Q4, 1),
+        MultiAMR.Mission(3, Q3, Q4, 1)
+    ]
+
+    return "dat/crossdock/no_collision.map", missions
+end
+function scenario_wait_demo()
+
+    Q1 = MultiAMR.Quai(1, (2,3))  # haut gauche
+    Q2 = MultiAMR.Quai(2, (4,9))  # bas droite
+
+    Q3 = MultiAMR.Quai(3, (4,3))  # bas gauche
+    Q4 = MultiAMR.Quai(4, (2,9))  # haut droite
+
+    missions = [
+
+        # AMR 1 traverse
+        MultiAMR.Mission(1, Q1, Q2, 1),
+
+        # AMR 2 arrive en conflit MAIS doit attendre
+        MultiAMR.Mission(2, Q3, Q4, 1)
+    ]
+
+    return "dat/crossdock/wait_demo.map", missions
+end
+function scenario_sequential_demo()
+
+    # haut
+    Q1 = MultiAMR.Quai(1, (1,3))
+    Q2 = MultiAMR.Quai(2, (1,14))
+
+    # bas
+    Q3 = MultiAMR.Quai(3, (6,3))
+    Q4 = MultiAMR.Quai(4, (6,14))
+
+    missions = [
+
+        # passe en premier → prend le meilleur chemin
+        MultiAMR.Mission(1, Q1, Q4, 1),
+
+        # doit s’adapter
+        MultiAMR.Mission(2, Q2, Q3, 1),
+
+        # encore plus contraint
+        MultiAMR.Mission(3, Q3, Q2, 2)
+    ]
+
+    return "dat/crossdock/sequential_demo.map", missions
+end
 end

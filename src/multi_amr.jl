@@ -76,6 +76,15 @@ end
 
 """
 Transforme un chemin spatial en chemin temporel.
+
+ Important :
+A* travaille déjà avec le temps en interne,
+mais ne retourne qu’un chemin spatial.
+
+Ici on reconstruit explicitement le temps
+pour pouvoir :
+- visualiser les déplacements
+- construire les contraintes pour les AMR suivants
 """
 function pathWithTime(path::Vector{Tuple{Int,Int}}, start_time::Int)
 
@@ -90,6 +99,11 @@ end
 
 """
 Construit les contraintes de nœuds à partir d’un chemin temporel.
+
+Chaque position occupée à un instant t devient interdite
+pour les AMR suivants.
+
+- empêche deux robots d’être sur la même case au même moment
 """
 function buildConstraints(timed_path)
 
@@ -104,7 +118,11 @@ end
 
 """
 Construit les contraintes d’arêtes à partir d’un chemin temporel.
-Ces contraintes servent à interdire les collisions croisées.
+
+- empêche les collisions de type swap :
+   A -> B et B -> A au même instant
+
+Important dans les espaces étroits (goulots).
 """
 function buildEdgeConstraints(timed_path)
 
@@ -125,26 +143,17 @@ function buildEdgeConstraints(timed_path)
 end
 
 """
-Reconstruit le meilleur chemin spatial atteignant goal_pos.
+Reconstruit le chemin optimal à partir des parents.
 
-Comme plusieurs états temporels peuvent atteindre la même position finale,
-on choisit celui de coût minimal.
+A* travaille sur des états (i, j, t),
+mais on reconstruit uniquement le chemin spatial.
+
+- on remonte les parents depuis l’état final
+- on ignore la dimension temporelle ici
+
+Le temps sera réinjecté ensuite avec pathWithTime.
 """
-function reconstructPath(g, parent, start_pos, goal_pos)
-
-    best_cost = Inf
-    goal_state = nothing
-
-    for (s, cost) in g
-        if (s[1], s[2]) == goal_pos && cost < best_cost
-            best_cost = cost
-            goal_state = s
-        end
-    end
-
-    if goal_state === nothing
-        return Tuple{Int,Int}[]
-    end
+function reconstructPath(parent, goal_state, start_pos)
 
     path = Tuple{Int,Int}[]
     current = goal_state
@@ -165,14 +174,20 @@ end
 # =========================
 
 """
-Planifie un seul AMR avec A* spatio-temporel.
+Planifie un AMR en tenant compte des contraintes existantes.
 
-Si aucun chemin n’est trouvé au temps initial,
-on tente un recalcul simple en retardant le départ.
+Logique :
+1. on lance A* avec contraintes
+2. si aucun chemin → on décale le départ
+
+- permet de résoudre les blocages sans recalcul global
+
+Choix volontaire :
+simple, robuste, mais pas optimal globalement
 """
 function planOneAMR(mapFile::String, amr::AMR, node_constraints, edge_constraints)
 
-    g, parent, states = AStarAlgo.algoAstarTime(
+    g, parent, states, goal_state = AStarAlgo.algoAstarTime(
         mapFile,
         amr.start,
         amr.goal,
@@ -181,7 +196,11 @@ function planOneAMR(mapFile::String, amr::AMR, node_constraints, edge_constraint
         edge_constraints
     )
 
-    path = reconstructPath(g, parent, amr.start, amr.goal)
+    if goal_state === nothing
+        return Tuple{Int,Int}[], states, amr.start_time
+    end
+
+    path = reconstructPath(parent, goal_state, amr.start)
 
     if isempty(path)
 
@@ -191,7 +210,7 @@ function planOneAMR(mapFile::String, amr::AMR, node_constraints, edge_constraint
 
             new_start_time = amr.start_time + delay
 
-            g, parent, states = AStarAlgo.algoAstarTime(
+            g, parent, states, goal_state = AStarAlgo.algoAstarTime(
                 mapFile,
                 amr.start,
                 amr.goal,
@@ -200,7 +219,7 @@ function planOneAMR(mapFile::String, amr::AMR, node_constraints, edge_constraint
                 edge_constraints
             )
 
-            path = reconstructPath(g, parent, amr.start, amr.goal)
+            path = reconstructPath(parent, goal_state, amr.start)
 
             if !isempty(path)
                 return path, states, new_start_time
@@ -233,36 +252,9 @@ end
 # =========================
 
 """
-Affiche la position de chaque AMR à chaque instant.
+Simulation visuelle simple pour comprendre le comportement.
+- utile pour debug + démonstration projet
 """
-function simulate(amr_paths)
-
-    timeline = Dict{Int, Vector{Tuple{Int,Tuple{Int,Int}}}}()
-
-    for (amr_id, path) in amr_paths
-        for (pos, t) in path
-
-            if !haskey(timeline, t)
-                timeline[t] = []
-            end
-
-            push!(timeline[t], (amr_id, pos))
-        end
-    end
-
-    println("\n===== Simulation temporelle =====")
-
-    for t in sort(collect(keys(timeline)))
-
-        print("t=", t, " : ")
-
-        for (id, pos) in timeline[t]
-            print("AMR", id, " ", pos, "  ")
-        end
-
-        println()
-    end
-end
 function simulateVisual(mapFile, amr_paths)
 
     grid, height, width = Utils.readMap(mapFile)
@@ -300,11 +292,16 @@ end
 """
 Planification séquentielle des AMR.
 
-Chaque AMR planifié ajoute :
-- des contraintes de nœuds
-- des contraintes d’arêtes
+Principe :
+- chaque AMR est planifié individuellement
+- son chemin génère des contraintes
+- les suivants doivent les respecter
 
-pour les AMR suivants.
+→ garantit aucune collision
+→ mais dépend de l’ordre de planification
+
+ compromis :
+simplicité vs optimalité globale
 """
 function runMultiAMR(mapFile::String, amrs::Vector{AMR})
 
