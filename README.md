@@ -1,6 +1,6 @@
 # Pathfinding Algorithms in Julia
 
-Projet réalisé dans le cadre du projet d'informatique.
+Projet réalisé dans le cadre du projet d'informatique scientifique.
 
 L’objectif est d’implémenter et d’étendre des algorithmes de recherche de chemin sur des cartes , puis de gérer plusieurs robots (AMR) en évitant les collisions.
 
